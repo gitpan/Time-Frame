@@ -41,12 +41,12 @@
 
 =head1 NAME
 
-  Time::Frame - objects to store a length of time
+Time::Frame - objects to store a length of time
 
 =head1 VERSION
 
-  This documention refers to version 1.0.3CB7RLu of 
-    Time::Frame, which was released on Thu Dec 11 07:27:21:56 2003.
+  This documention refers to version 1.0.3CCA3bG of 
+    Time::Frame, which was released on Fri Dec 12 10:03:37:16 2003.
 
 =head1 SYNOPSIS
 
@@ -196,6 +196,10 @@
 
 =over 4
 
+=item - 1.0.3CCA3bG  Fri Dec 12 10:03:37:16 2003
+
+  * removed indenting from POD NAME field
+
 =item - 1.0.3CB7RLu  Thu Dec 11 07:27:21:56 2003
 
   * added HTML color option && prepared for release
@@ -244,12 +248,13 @@
 =cut
 
 package Time::Frame;
+require Time::Fields;
 use strict;
 use vars qw( $AUTOLOAD );
 use base qw( Time::Fields );
 use Carp;
 use Math::BaseCnv qw( :all );
-our $VERSION     = '1.0.3CB7RLu'; # major . minor . PipTimeStamp
+our $VERSION     = '1.0.3CCA3bG'; # major . minor . PipTimeStamp
 our $PTVR        = $VERSION; $PTVR =~ s/^\d+\.\d+\.//; # strip major && minor
 # See http://Ax9.org/pt?$PTVR && `perldoc Time::PT`
 use constant ONE_MINUTE          => '1 min';                  #         60;
