@@ -1,0 +1,239 @@
+ 37VG26k - Time::Frame.pm created by Pip@CPAN.org to make simple
+   objects for frames of time.
+ Desc: Frame describes a simple object which encapsulates 10 fields:
+     Century, Year, Month, Day, hour, minute, second, frame, jink, zone
+   where frame is normally 1/60th-of-a-second && jink is normally 
+   1/60th-of-a-frame.  The objects describe a high-precision time-frame 
+   (as in, a duration, a period, a length or span of time).  Frame 
+   objects can be added to / subtracted from Time::PT objects to yield 
+   new specific PT instants.
+     1st: '0A1B2C3'
+     2nd: 'Yd:2003,j:A7_,M:a3I' or 'f:3aL9.eP' 
+     if field name ends with d, value is read as decimal nstd of default b64.
+     Third way is super verbose decimal strings:
+       '15 years, 3 months, 7 weeks, 4 jinx' can use any (or none) sep but :
+     4th is hash
+     Total Jinx possible for PT: 1,680,238,080,000,000 (1.7 quatrillion)
+           JnxPTEpoch -> `pt __nWO0000` -> Midnight Jan. 1 7039 BCE
+              PTEpoch -> `pt  _nWO`     -> Midnight Jan. 1 1361  CE
+   Frame members:
+     new inits either with pt-param, expanded, or empty
+
+     settle fields (like return new Frame object with only total secs of old)
+     re-def frame as other than 60th-of-a-second
+     re-def jink  as other than 60th-of-a-frame
+       eg. def f && j limits as 31.6227766016838 (sqrt(1000)) for ms jinx
+           or just def f as 1000 for exactly ms frames
+     allow month/year modes to be set to avg or relative
+
+  My bass64 encoding uses characters: 0-9 A-Z a-z . _  since I don't like
+    having spaces or plusses in my time strings.  I need times to be easy to
+    append to filenames for very precise, consice, time-stamp versioning.
+  Each encoded character represents (normally) just a single date or time 
+    field.  All fields are 0-based except Month && Day.  The fields are:
+      Year-2000, Month, Day, Hour, Minute, Second, Frame (60th-of-a-second)
+  There are three (3) exceptions to the rule that each character only
+    represents one date or time field.  The bits are there so... why not? =)
+  0) Each 12 added to the Month adds  64 to the Year.
+  1)      24 added to the Hour  adds 320 to the Year.
+  2)      31 added to the Day   makes the year negative just before adding 
+            2000.
+
+NAME
+
+  Time::Frame - objects to store a length of time
+
+VERSION
+
+  This documention refers to version 1.0.3CB7RLu of 
+    Time::Frame, which was released on Thu Dec 11 07:27:21:56 2003.
+
+SYNOPSIS
+
+    use Time::Frame;
+    
+    my $f = Time::Frame->new('verbose' => '2 weeks');
+    print 'Number of days is ', $f->day(), "\n";
+
+DESCRIPTION
+
+  This module has been adapted from the Time::Seconds module 
+    written by Matt Sergeant <matt@sergeant.org> && Jarkko 
+    Hietaniemi <jhi@iki.fi>.  Time::Frame inherits base 
+    data structure && object methods from Time::Fields.  
+    Frame was written to simplify storage && calculation 
+    of encoded, yet distinct && human-readable, time data 
+    objects.
+
+  The title of this Perl module has dual meaning.  Frame
+    means both the span of time the whole object represents
+    as well as the (default) smallest unit of measurement.
+
+2DO
+
+  better ways to specify common verbose sizes
+        What else does Frame need?
+
+WHY?
+
+  The reason I created Frame was that I have grown so enamored with
+    Bass64 representations of everything around me that I was 
+    compelled to write a simple clock utility ( `pt` ) using Bass64.
+    This demonstrated the benefit to be gained from time objects with
+    distinct fields && configurable precision.  Thus, Time::Fields
+    was written to be the abstract base class for:
+      Time::Frame  ( creates objects which represent spans    of time )
+          && 
+      Time::PT     ( creates objects which represent instants in time )
+
+USAGE
+
+  Many of Time::Frame's methods have been patterned after the excellent
+    Time::Piece module written by Matt Sergeant <matt@sergeant.org>
+    && Jarkko Hietaniemi <jhi@iki.fi>.
+
+  new(<InitType>, <InitData>) - Time::Frame's constructor can be called
+    as a class method to create a brand new object or as an object 
+    method to copy an existing object.  Beyond that, new() can 
+    initialize Frame objects 3 different ways:
+     -1) <packedB64InitStringImplies'str'>
+        eg. Time::Frame->new('0123456789');
+      0) 'str'  => <packedB64InitString>
+        eg. Time::Frame->new('str'  => '0A1B2C3D4E');
+      1) 'list' => <arrayRef>
+        eg. Time::Frame->new('list' => [0, 1, 2..9]);
+      2) 'hash' => <hashRef>
+        eg. Time::Frame->new('hash' => {'jink' => 8, 'year' => 2003})
+
+  color(<DestinationColorTypeFormat>) - This is an object member
+    which will join bass64 representations of each field that has
+    been specified in use() && joins them with color-codes or color
+    escape sequences with formats for varied uses.  Currently
+    available DestinationColorTypeFormats are:
+      'ANSI'  # eg. \e[1;32m
+      'zsh'   # eg. %{\e[1;33m%}
+      'HTML'  # eg. <a href="http://Ax9.org/pt?"><font color="#FF1B2B">
+      'Simp'  # eg. RbobYbGbCbUbPb
+
+  The following methods allow access to individual fields of 
+    Time::Frame objects:
+
+    $t->C  or  $t->century
+    $t->Y  or  $t->year
+    $t->M  or  $t->month
+    $t->D  or  $t->day
+    $t->h  or  $t->hour
+    $t->m  or  $t->minute
+    $t->s  or  $t->second
+    $t->f  or  $t->frame
+    $t->j  or  $t->jink
+    $t->z  or  $t->zone
+
+  Any combination of above single letters can be used as well.  
+    Following are some common useful examples:
+  
+    $t->hms                 # returns list of fields eg. [12, 34, 56]
+    $t->hms(12, 56, 34)     # sets fields: h = 12, m = 56, s = 34
+    $t->hmsf                # [12, 34, 56, 12]
+    $t->hmsfj               # [12, 34, 56, 12, 34]
+    $t->hmsfjz              # [12, 34, 56, 12, 34, 16]
+    $t->time                # same as $t->hms
+    $t->alltime             # same as $t->hmsfjz
+    $t->YMD                 # [2000,  2,   29]
+    $t->MDY                 # [   2, 29, 2000]
+    $t->DMY                 # [  29,  2, 2000]
+    $t->CYMD                # [  20,  0,    2, 29]
+    $t->date                # same as $t->YMD
+    $t->alldate             # same as $t->CYMD
+    $t->CYMDhmsfjz          # [  20,  0,    2, 29, 12, 13, 56, 12, 13, 16]
+    $t->all                 # same as $t->CYMDhmsfjz
+    $t->dt                  # same as $t->CYMDhmsfjz
+    "$t"                    # same as $t->CYMDhmsfjz
+
+  Method names can be in any case with the following exceptions.  
+    Special handling exists to resolve ambiguity between the Month && 
+    minute fields.  If a lowercase 'm' is used adjacent to a 'y' or 'd'
+    of either case, it is interpreted as Month.  Otherwise, the case of 
+    the 'm' distinguishes Month from minute.  An uppercase 'M' is ALWAYS
+    Month.  An adjacent uppercase 'H' or 'S' will not turn an uppercase
+    'M' into minute.  Method names which need to specify Month or minute
+    fields can also optionally specify the distinguishing vowel 
+    ('o' or 'i') instead of 'M' or 'm'.
+
+    $t->ymd                 # same as $t->YMD
+    $t->dmy                 # same as $t->DMY
+    $t->MmMm                # Month minute Month minute
+    $t->HMS                 # hour Month second! NOT same as $t->hms 
+    $t->yod                 # same as $t->YMD
+    $t->chmod               # Century hour minute Month Day
+    $t->FooIsMyJoy          # frame Month Month minute second Month Year
+                            #   jink Month Year
+
+NOTES
+
+  Whenever individual Time::Frame attributes are going to be 
+    printed or an entire object can be printed with multi-colors,
+    the following mapping should be employed whenever possible:
+          D       Century -> DarkRed
+          A       Year    -> Red
+          T       Month   -> Orange
+          E       Day     -> Yellow
+                   hour   -> Green
+           t       minute -> Cyan
+           i       second -> Blue
+           m       frame  -> Purple
+           e       jink   -> DarkPurple
+                   zone   -> Grey or White
+  Please see the color() member function in the USAGE section.
+
+  I hope you find Time::Frame useful.  Please feel free to e-mail me 
+    any suggestions || coding tips || notes of appreciation 
+    ("app-ree-see-ay-shun").  Thank you.  TTFN.
+
+CHANGES
+
+  Revision history for Perl extension Time::Frame:
+
+- 1.0.3CB7RLu  Thu Dec 11 07:27:21:56 2003
+
+  * added HTML color option && prepared for release
+
+- 1.0.3CA8thM  Wed Dec 10 08:55:43:22 2003
+
+  * built class to inherit from Time::Fields
+
+- 1.0.37VG26k  Thu Jul 31 16:02:06:46 2003
+
+  * original version
+
+INSTALL
+
+  Please run:
+        `perl -MCPAN -e "install Time::Frame"`
+    or uncompress the package && run the standard:
+        `perl Makefile.PL; make; make test; make install`
+
+FILES
+
+  Time::Frame requires:
+    Carp                to allow errors to croak() from calling sub
+    Math::BaseCnv       to handle number-bass conversion
+    Time::Fields        to provide underlying object structure
+
+SEE ALSO
+
+  Time::PT
+
+LICENSE
+
+  Most source code should be Free!
+    Code I have lawful authority over is && shall be!
+  Copyright: (c) 2003, Pip Stuart.  All rights reserved.
+  Copyleft :  I license this software under the GNU General Public
+    License (version 2).  Please consult the Free Software Foundation
+    (http://www.fsf.org) for important information about your freedom.
+
+AUTHOR
+
+  Pip Stuart <Pip@CPAN.org>
+
